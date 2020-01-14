@@ -198,6 +198,16 @@ class NestedCugHook implements PostValidationHook, CugConstants {
         @Override
         public boolean childNodeChanged(String name, NodeState before, NodeState after) {
             if (!NodeStateUtils.isHidden(name)) {
+                if (CugUtil.definesCug(name, after)) {
+                    Diff diff = parentDiff;
+                    while (diff != null) {
+                        if (diff.afterHoldsCug) {
+                            NodeBuilder cugNode = diff.afterBuilder.getChildNode(REP_CUG_POLICY);
+                            addNestedCugPath(cugNode, afterBuilder.getChildNode(REP_CUG_POLICY), path);
+                        }
+                        diff = diff.parentDiff;
+                    }
+                }
                 after.compareAgainstBaseState(before, new Diff(this, name, before, afterBuilder.getChildNode(name)));
             }
             return true;
